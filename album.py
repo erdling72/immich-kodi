@@ -11,7 +11,7 @@ from models import Album, ItemAsset
 from utils import (
     API_KEY,
     RAW_SERVER_URL,
-    SHARED_ONLY,
+    getSharedOnly,
     conn,
     get_asset_name,
     get_url,
@@ -28,10 +28,12 @@ def list_albums():
         "x-api-key": API_KEY,
     }
 
+    sharedOnly=getSharedOnly()
+    
     params = ""
-    if SHARED_ONLY is True:
+    if sharedOnly is True:
         params = "?shared=true"
-    elif SHARED_ONLY is False:
+    elif sharedOnly is False:
         params = "?shared=false"
 
     conn.request("GET", f"/api/albums{params}", "", headers)
