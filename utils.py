@@ -13,7 +13,6 @@ import iso8601
 HANDLE = int(sys.argv[1])
 
 RAW_SERVER_URL = xbmcplugin.getSetting(HANDLE, "immich_url")
-SHARED_ONLY = xbmcplugin.getSetting(HANDLE, "shared_only")
 ASSET_NAMETYPE = int(xbmcplugin.getSetting(HANDLE, "asset_name"))
 SERVER_URL = urlparse(RAW_SERVER_URL)
 API_KEY = xbmcplugin.getSetting(HANDLE, "api_key")
@@ -137,3 +136,12 @@ def get_url(**kwargs):
 
 def getThumbUrl(id):
     return f"{RAW_SERVER_URL}/api/assets/{id}/thumbnail|x-api-key={API_KEY}"
+
+def getSharedOnly():
+    _shared_raw = xbmcplugin.getSetting(HANDLE, "shared_only")
+    if _shared_raw.lower() in ("true", "1"):
+        return True
+    elif _shared_raw.lower() in ("false", "0"):
+        return False
+    return None
+
