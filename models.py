@@ -31,14 +31,15 @@ class Album:
     albumUsers: List[AlbumUser]
     shared: bool
     hasSharedLink: bool
-    startDate: str
-    endDate: str
+
     assets: list
     assetCount: int
     isActivityEnabled: bool
     order: str
-    lastModifiedAssetTimestamp: str
     # Additional optional fields for API resilience
+    startDate: str = None
+    endDate: str = None
+    lastModifiedAssetTimestamp: str = None
     albumOrder: Optional[str] = None
     isPinned: bool = False
     timelineEnabled: bool = True
