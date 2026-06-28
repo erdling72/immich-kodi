@@ -31,7 +31,6 @@ class Album:
     albumUsers: List[AlbumUser]
     shared: bool
     hasSharedLink: bool
-
     assets: list
     assetCount: int
     isActivityEnabled: bool

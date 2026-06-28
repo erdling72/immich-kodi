@@ -34,6 +34,7 @@ def list_albums():
     items = [
         (get_url(action="album", id=album.id), xbmcgui.ListItem(album.albumName), True)
         for album in res
+        if album.assetCount > 0
     ]
     for item, album in zip(items, res):
         if album.startDate:
