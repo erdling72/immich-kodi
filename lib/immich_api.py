@@ -9,6 +9,7 @@ class Immich_API():
     def __init__(self, RAW_SERVER_URL, APIKey):
         self.url    = RAW_SERVER_URL
         self.APIKey = APIKey
+        self.global_filter = {}
 
     #---------------------------------------------------------
     @staticmethod
@@ -56,11 +57,17 @@ class Immich_API():
         return [TimelineBucket.from_api_response(d) for d in resp ]
 
     #---------------------------------------------------------
-    def getThumbUrl(self, id):
-        return f"{self.url}/api/assets/{id}/thumbnail|x-api-key={self.APIKey}"    
+    def getThumbUrl(self, uuid):
+        return self.getAssetUrl(uuid, size="preview")
 
-    def getAssetUrl(self, id):
-        return f"{self.url}/api/assets/{id}/original|x-api-key={self.APIKey}"
+    def getAssetUrl(self, uuid, size="original"):
+        if size=="original":
+            return f"{self.url}/api/assets/{uuid}/original|x-api-key={self.APIKey}"
+            
+        elif size=="preview":
+            return f"{self.url}/api/assets/{uuid}/thumbnail?size={size}|x-api-key={self.APIKey}"
+        else:
+            raise ValueError
     #---------------------------------------------------------
     def get_album(self, id):
    
@@ -85,7 +92,31 @@ class Immich_API():
         
         data = {"assets": [ItemAsset.from_api_response(d) for d in resp["assets"]["items"]]}
         return data
-            
+
+    #---------------------------------------------------------
+    def get_random_Asset(self, filter={"size": 1}):    
+        # Just get one random picture
+
+        d = self.global_filter.copy()
+        d.update(filter)
+
+        response = self._api_call("POST", "search/random", d)
+        return response
+        
+    #---------------------------------------------------------
+    def getAssetInfo(self, assetId):
+	    return self._api_call("GET", f"assets/{assetId}")
+
+    #---------------------------------------------------------
+    def getParrentAlbums(self, assetId):
+	    response = self._api_call("GET", f"albums?assetId={assetId}")
+	    
+	    blacklist = ['Bilderrahmen']
+	    	    
+	    data = [x for x in response if x['albumName'] not in blacklist]
+	    return data
+	    
+
 # ======================================================================================
 # ======================================================================================
     
