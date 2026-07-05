@@ -3,7 +3,6 @@
 import requests
 import logging
 import sys
-import datetime
 from lib.models import Album, ItemAsset, TimelineBucket
 
 class Immich_API():
@@ -20,13 +19,6 @@ class Immich_API():
         except ModuleNotFoundError:
             return "Immich-API 0.1"
             
-    #---------------------------------------------------------
-    @staticmethod
-    def next_month(any_day):
-        next_month = any_day.replace(day=28) + datetime.timedelta(days=4)
-        return next_month
-        # - datetime.timedelta(days=next_month.day)        
-
     #---------------------------------------------------------
     def _api_call(self, action, path, payload=None):
         url = f"{self.url}/api/{path}"

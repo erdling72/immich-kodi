@@ -4,7 +4,7 @@ import xbmc
 import xbmcplugin
 from xbmcaddon import Addon
 from xbmcvfs import translatePath
-
+import datetime
 from urllib.parse import urlencode
 
 HANDLE = int(sys.argv[1])
@@ -93,3 +93,9 @@ def get_url(**kwargs):
     """
     return "{}?{}".format(sys.argv[0], urlencode(kwargs))
 
+
+#---------------------------------------------------------
+def next_month(any_day):
+    next_month = any_day.replace(day=28) + datetime.timedelta(days=4)
+    return next_month
+    # - datetime.timedelta(days=next_month.day)

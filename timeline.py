@@ -7,7 +7,8 @@ import datetime
 from immich import IMMICH, KodiContent
 
 from utils import (
-    get_url
+    get_url,
+    next_month
 )
 
 HANDLE = int(sys.argv[1])
@@ -26,7 +27,7 @@ def timeline(video):
 
 
         startdate = datetime.datetime.strptime(bucket.timeBucket, '%Y-%m-%d').replace(tzinfo=datetime.timezone.utc)
-        enddate = IMMICH.next_month(startdate)
+        enddate = next_month(startdate)
             
         item = xbmcgui.ListItem(f"{startdate.strftime('%Y-%m-%d')} -- {enddate.strftime('%Y-%m-%d')}  ({bucket.count}) Items")
 
@@ -53,7 +54,7 @@ def timeline(video):
 def time(id, video):
    
     startdate = datetime.datetime.strptime(id, '%Y-%m-%d').replace(tzinfo=datetime.timezone.utc)
-    enddate = IMMICH.next_month(startdate)
+    enddate = next_month(startdate)
 
     bucket = IMMICH.getTimeBucket(startdate, enddate)
     KodiContent(HANDLE, bucket["assets"])
