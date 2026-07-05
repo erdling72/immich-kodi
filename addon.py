@@ -12,7 +12,7 @@ from album import list_albums, album
 from timeline import timeline, time
 from utils import get_url, set_locale
 
-from lib.immich_api import IMMICH
+from immich import IMMICH
 
 DEBUG = False
 if DEBUG:

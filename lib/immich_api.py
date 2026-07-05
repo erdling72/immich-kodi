@@ -4,7 +4,7 @@ import requests
 import logging
 import sys
 import datetime
-from models import Album, ItemAsset
+from lib.models import Album, ItemAsset, TimelineBucket
 
 class Immich_API():
     def __init__(self, RAW_SERVER_URL, APIKey):
@@ -19,7 +19,14 @@ class Immich_API():
             return xbmc.getUserAgent()
         except ModuleNotFoundError:
             return "Immich-API 0.1"
-        
+            
+    #---------------------------------------------------------
+    @staticmethod
+    def next_month(any_day):
+        next_month = any_day.replace(day=28) + datetime.timedelta(days=4)
+        return next_month
+        # - datetime.timedelta(days=next_month.day)        
+
     #---------------------------------------------------------
     def _api_call(self, action, path, payload=None):
         url = f"{self.url}/api/{path}"
@@ -47,10 +54,15 @@ class Immich_API():
         return self._api_call("GET", "server/version")
 
     #---------------------------------------------------------
-    def list_albums(self):
+    def getAllAlbums(self):
         resp = self._api_call("GET", "albums")
         return [Album.from_api_response(d) for d in resp ]
         
+    #---------------------------------------------------------
+    def getTimeBuckets(self):
+        resp = self._api_call("GET", "timeline/buckets")
+        return [TimelineBucket.from_api_response(d) for d in resp ]
+
     #---------------------------------------------------------
     def getThumbUrl(self, id):
         return f"{self.url}/api/assets/{id}/thumbnail|x-api-key={self.APIKey}"    
@@ -68,29 +80,20 @@ class Immich_API():
             
         data = {"assets": [ItemAsset.from_api_response(d) for d in resp["assets"]["items"]]}
         return data
-    
+
+    #---------------------------------------------------------
+    def getTimeBucket(self, startdate, enddate):
+        
+        resp = self._api_call("POST", "search/metadata", {
+            "visibility": "timeline",
+            "withExif": True,
+            "takenAfter": startdate.isoformat(), 
+            "takenBefore": enddate.isoformat()
+            })
+        
+        data = {"assets": [ItemAsset.from_api_response(d) for d in resp["assets"]["items"]]}
+        return data
+            
 # ======================================================================================
 # ======================================================================================
-if __name__ == '__main__':
-
-
-    IMMICH = Immich_API(
-        "https://***",
-        "***")
-
-    print(IMMICH.get_version())  
-#    print(IMMICH.list_albums()[0])
-
-    print(IMMICH.get_album('d8bf768b-5096-4cfe-94a3-964a933bd5d2')["assets"][3].exifInfo.to_kodi_info())
-
-# ======================================================================================
-# ======================================================================================
-else:
-    import xbmcplugin
-    HANDLE = int(sys.argv[1])
-
-    RAW_SERVER_URL = xbmcplugin.getSetting(HANDLE, "immich_url")
-    API_KEY = xbmcplugin.getSetting(HANDLE, "api_key")
-
-    IMMICH = Immich_API(RAW_SERVER_URL,API_KEY)
     
