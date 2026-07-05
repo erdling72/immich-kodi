@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from typing import List, Optional
 import datetime
 
@@ -9,14 +9,19 @@ class User:
     name: str
     profileImagePath: str
     avatarColor: str
-    profileChangedAt: str
-
+    profileChangedAt:  str | datetime.datetime
+    
+    def __post_init__(self):
+        if isinstance(self.profileChangedAt, str):
+            self.profileChangedAt = datetime.datetime.fromisoformat(self.profileChangedAt)
 
 @dataclass
 class AlbumUser:
     user: User
     role: str
-
+    def __post_init__(self):
+        if isinstance(self.user, dict):
+            self.user = User(**self.user) 
 
 @dataclass
 class Album:
@@ -26,15 +31,12 @@ class Album:
     createdAt: str
     updatedAt: str
     id: str
-    ownerId: str
-    owner: User
     albumUsers: List[AlbumUser]
     shared: bool
     hasSharedLink: bool
-    assets: list
-    assetCount: int
     isActivityEnabled: bool
     order: str
+    assetCount: int = 0
     # Additional optional fields for API resilience
     startDate: datetime.datetime = None
     endDate: datetime.datetime = None
@@ -45,25 +47,27 @@ class Album:
     unknown_fields: Optional[dict] = None
 
     def __post_init__(self):
-        if isinstance(self.owner, dict):
-            self.owner = User(**self.owner)
         if isinstance(self.albumUsers, list):
             self.albumUsers = [AlbumUser(**user) for user in self.albumUsers]
 
     @classmethod
     def from_api_response(cls, data: dict) -> "Album":
-        """Create Album from API response, ignoring unknown fields."""
-        known_fields = {f.name for f in cls.__dataclass_fields__.values()}
-        filtered_data = {k: v for k, v in data.items() if k in known_fields}
-        unknown = {k: v for k, v in data.items() if k not in known_fields}
-        
-        for x in ['startDate', 'endDate', 'lastModifiedAssetTimestamp', 'createdAt', 'updatedAt']:
-                if x in filtered_data:
-                    filtered_data[x] = datetime.datetime.fromisoformat(filtered_data[x])
-        
-        if unknown:
-            filtered_data["unknown_fields"] = unknown
-        return cls(**filtered_data)
+        try:
+            """Create Album from API response, ignoring unknown fields."""
+            known_fields = {f.name for f in cls.__dataclass_fields__.values()}
+            filtered_data = {k: v for k, v in data.items() if k in known_fields}
+            unknown = {k: v for k, v in data.items() if k not in known_fields}
+            
+            for x in ['startDate', 'endDate', 'lastModifiedAssetTimestamp', 'createdAt', 'updatedAt']:
+                    if x in filtered_data:
+                        filtered_data[x] = datetime.datetime.fromisoformat(filtered_data[x])
+            
+            if unknown:
+                filtered_data["unknown_fields"] = unknown
+            return cls(**filtered_data)
+        except Exception as e:
+            print(f"Error reading {data}: {e}")
+            return False
 
 
 @dataclass
@@ -107,24 +111,15 @@ class ExifInfo:
         return cls(**filtered_data)
 
     def to_kodi_info(self) -> dict[str, str]:
-        info = {f.name:self.name for f in self.__dataclass_fields__.values()}
-
-#        if self.exifImageWidth and self.exifImageHeight:
-#            mapping["resolution"] = f"{self.exifImageWidth},{self.exifImageHeight}"
-
-#        for key, value in mapping.items():
-#            if value is not None:
-#                info[f"exif:{key}"] = str(value)
-
+        fnames = [x.name for x in fields(self)]
+        info = {f"exif:{key}": getattr(self, key) for key in fnames if getattr(self, key)}
         return info
 
 
 @dataclass
 class ItemAsset:
     id: str
-    deviceAssetId: str
     ownerId: str
-    deviceId: str
     type: str
     originalPath: str
     originalFileName: str
@@ -162,6 +157,7 @@ class ItemAsset:
     isReadOnly: bool = False
     sidecarPath: Optional[str] = None
     isVisible: bool = True
+    isEdited: bool = None
     # Accept and ignore any additional fields from API
     unknown_fields: Optional[dict] = None
 

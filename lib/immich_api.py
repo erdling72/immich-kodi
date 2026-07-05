@@ -4,7 +4,7 @@ import requests
 import logging
 import sys
 import datetime
-from lib.models import Album, ItemAsset
+from models import Album, ItemAsset
 
 class Immich_API():
     def __init__(self, RAW_SERVER_URL, APIKey):
@@ -59,10 +59,15 @@ class Immich_API():
         return f"{self.url}/api/assets/{id}/original|x-api-key={self.APIKey}"
     #---------------------------------------------------------
     def get_album(self, id):
-        resp = self._api_call("GET", f"albums/{id}")
-        
-        resp["assets"] = [ItemAsset.from_api_response(d) for d in resp["assets"] ]
-        return resp
+   
+        resp = self._api_call("POST", "search/metadata", {
+            "albumIds": [id],
+            "visibility": "timeline",
+            "withExif": True
+            })
+            
+        data = {"assets": [ItemAsset.from_api_response(d) for d in resp["assets"]["items"]]}
+        return data
     
 # ======================================================================================
 # ======================================================================================
@@ -70,13 +75,13 @@ if __name__ == '__main__':
 
 
     IMMICH = Immich_API(
-        "https://********",
-        "********")
+        "https://immich.siedler.xyz",
+        "e1fDGydhXQTtaya3vCE0JUzn3KcGD1T7kzVCbGY")
 
-#    print(IMMICH.get_version())  
-#    print(IMMICH.list_albums())
+    print(IMMICH.get_version())  
+#    print(IMMICH.list_albums()[0])
 
-#    print(IMMICH.get_album('lkjhj7'))
+    print(IMMICH.get_album('d8bf768b-5096-4cfe-94a3-964a933bd5d2')["assets"][3].exifInfo.to_kodi_info())
 
 # ======================================================================================
 # ======================================================================================

@@ -81,7 +81,7 @@ def album(id):
                 type='pictures', 
                 infoLabels={
                     'title': asset.originalFileName,
-                    **{f"exif:{k}": str(v) for k, v in asset.exifInfo},
+                    **asset.exifInfo.to_kodi_info(),
                     }
 	        )
 	        
