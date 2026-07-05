@@ -75,8 +75,8 @@ if __name__ == '__main__':
 
 
     IMMICH = Immich_API(
-        "https://immich.siedler.xyz",
-        "e1fDGydhXQTtaya3vCE0JUzn3KcGD1T7kzVCbGY")
+        "https://***",
+        "***")
 
     print(IMMICH.get_version())  
 #    print(IMMICH.list_albums()[0])
