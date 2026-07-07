@@ -136,8 +136,6 @@ class ItemAsset:
     visibility: str
     duration: str
     exifInfo: ExifInfo
-    libraryId: Optional[str] = None
-    livePhotoVideoId: Optional[str] = None
     people: Optional[List[str]] = None
     checksum: Optional[str] = None
     isOffline: bool = False
@@ -155,7 +153,6 @@ class ItemAsset:
     encodedVideoPath: Optional[str] = None
     isExternal: bool = False
     isReadOnly: bool = False
-    sidecarPath: Optional[str] = None
     isVisible: bool = True
     isEdited: bool = None
     # Accept and ignore any additional fields from API
