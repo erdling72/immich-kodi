@@ -31,21 +31,18 @@ def KodiContent(HANDLE, assets, t="timeline"):
         # item.setLabel(asset.exifInfo.description) # Titel überschreben
         item.setLabel2(asset.exifInfo.description)
 
-        tag = item.getVideoInfoTag()
+	        
+        if asset.exifInfo.description and asset.type==  'VIDEO':
         
-        tag.setTitle(asset.originalFileName)
+            tag = item.getVideoInfoTag()
+            tag.setTitle(asset.originalFileName)
+            
+            if asset.exifInfo.description:
+                tag.setPlot(asset.exifInfo.description)
+
+            if asset.exifInfo.rating:
+                tag.setUserRating(asset.exifInfo.rating)
         
-        if asset.exifInfo.description:
-            tag.setPlot(asset.exifInfo.description)
-
-        if asset.exifInfo.rating:
-            tag.setUserRating(asset.exifInfo.rating)
-
-
-#        elif asset.type == "IMAGE":
-#            tag.setResolution(asset.width, asset.height)
-#            tag.setPlot(asset.exifInfo.description)
-
 #            item.setInfo(
 #                type='video', 
 #                infoLabels={
@@ -54,8 +51,14 @@ def KodiContent(HANDLE, assets, t="timeline"):
 #                    }
 #	        )
 
-
-
+        elif asset.exifInfo.description and asset.type=='IMAGE':
+            item.setInfo(
+                type='pictures', 
+                infoLabels={
+                    'title': asset.originalFileName,
+                    **asset.exifInfo.to_kodi_info(),
+                    }
+	        )
             
         items.append((
             IMMICH.getAssetUrl(asset.id), 
