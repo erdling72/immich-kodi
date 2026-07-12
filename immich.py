@@ -29,6 +29,7 @@ def KodiContent(HANDLE, assets, t="timeline"):
         # item.setLabel(asset.exifInfo.description) # Titel überschreben
         item.setLabel2(asset.exifInfo.description)
 
+
             
         if asset.type == "VIDEO":
             tag = item.getVideoInfoTag()
@@ -68,7 +69,6 @@ def KodiContent(HANDLE, assets, t="timeline"):
                 AssetSize = "video"
             else:
                 AssetSize = "preview"
-        
             
         items.append((
             IMMICH.getAssetUrl(asset.id, size=AssetSize), 
