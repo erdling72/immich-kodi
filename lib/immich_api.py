@@ -58,14 +58,18 @@ class Immich_API():
 
     #---------------------------------------------------------
     def getThumbUrl(self, uuid):
-        return self.getAssetUrl(uuid, size="preview")
+        return self.getAssetUrl(uuid, size="thumbnail")
 
+    #---------------------------------------------------------
     def getAssetUrl(self, uuid, size="original"):
         if size=="original":
             return f"{self.url}/api/assets/{uuid}/original|x-api-key={self.APIKey}"
             
-        elif size=="preview":
+        elif size in ["original", "fullsize", "preview", "thumbnail"]:
             return f"{self.url}/api/assets/{uuid}/thumbnail?size={size}|x-api-key={self.APIKey}"
+
+        elif size == "video": # Transcoded video
+            return f"{self.url}/api/assets/{uuid}/video/playback|x-api-key={self.APIKey}"
         else:
             raise ValueError
     #---------------------------------------------------------
@@ -116,7 +120,7 @@ class Immich_API():
 	    data = [x for x in response if x['albumName'] not in blacklist]
 	    return data
 	    
-
+            
 # ======================================================================================
 # ======================================================================================
     
