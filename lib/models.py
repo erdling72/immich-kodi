@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from typing import List, Optional
-
+import datetime
 
 @dataclass
 class User:
@@ -9,14 +9,19 @@ class User:
     name: str
     profileImagePath: str
     avatarColor: str
-    profileChangedAt: str
-
+    profileChangedAt:  str | datetime.datetime
+    
+    def __post_init__(self):
+        if isinstance(self.profileChangedAt, str):
+            self.profileChangedAt = datetime.datetime.fromisoformat(self.profileChangedAt)
 
 @dataclass
 class AlbumUser:
     user: User
     role: str
-
+    def __post_init__(self):
+        if isinstance(self.user, dict):
+            self.user = User(**self.user) 
 
 @dataclass
 class Album:
@@ -26,39 +31,43 @@ class Album:
     createdAt: str
     updatedAt: str
     id: str
-    ownerId: str
-    owner: User
     albumUsers: List[AlbumUser]
     shared: bool
     hasSharedLink: bool
-    assets: list
-    assetCount: int
     isActivityEnabled: bool
     order: str
+    assetCount: int = 0
     # Additional optional fields for API resilience
-    startDate: str = None
-    endDate: str = None
-    lastModifiedAssetTimestamp: str = None
+    startDate: datetime.datetime = None
+    endDate: datetime.datetime = None
+    lastModifiedAssetTimestamp: datetime.datetime = None
     albumOrder: Optional[str] = None
     isPinned: bool = False
     timelineEnabled: bool = True
     unknown_fields: Optional[dict] = None
 
     def __post_init__(self):
-        if isinstance(self.owner, dict):
-            self.owner = User(**self.owner)
         if isinstance(self.albumUsers, list):
             self.albumUsers = [AlbumUser(**user) for user in self.albumUsers]
 
     @classmethod
     def from_api_response(cls, data: dict) -> "Album":
-        """Create Album from API response, ignoring unknown fields."""
-        known_fields = {f.name for f in cls.__dataclass_fields__.values()}
-        filtered_data = {k: v for k, v in data.items() if k in known_fields}
-        unknown = {k: v for k, v in data.items() if k not in known_fields}
-        if unknown:
-            filtered_data["unknown_fields"] = unknown
-        return cls(**filtered_data)
+        try:
+            """Create Album from API response, ignoring unknown fields."""
+            known_fields = {f.name for f in cls.__dataclass_fields__.values()}
+            filtered_data = {k: v for k, v in data.items() if k in known_fields}
+            unknown = {k: v for k, v in data.items() if k not in known_fields}
+            
+            for x in ['startDate', 'endDate', 'lastModifiedAssetTimestamp', 'createdAt', 'updatedAt']:
+                    if x in filtered_data:
+                        filtered_data[x] = datetime.datetime.fromisoformat(filtered_data[x])
+            
+            if unknown:
+                filtered_data["unknown_fields"] = unknown
+            return cls(**filtered_data)
+        except Exception as e:
+            print(f"Error reading {data}: {e}")
+            return False
 
 
 @dataclass
@@ -101,22 +110,25 @@ class ExifInfo:
             filtered_data["unknown_fields"] = unknown
         return cls(**filtered_data)
 
+    def to_kodi_info(self) -> dict[str, str]:
+        fnames = [x.name for x in fields(self)]
+        info = {f"exif:{key}": getattr(self, key) for key in fnames if getattr(self, key)}
+        return info
+
 
 @dataclass
 class ItemAsset:
     id: str
-    deviceAssetId: str
     ownerId: str
-    deviceId: str
     type: str
     originalPath: str
     originalFileName: str
     originalMimeType: str
     thumbhash: str
-    fileCreatedAt: str
-    createdAt: str
-    fileModifiedAt: str
-    localDateTime: str
+    fileCreatedAt: datetime.datetime
+    createdAt: datetime.datetime
+    fileModifiedAt: datetime.datetime
+    localDateTime: datetime.datetime
     updatedAt: str
     isFavorite: bool
     isArchived: bool
@@ -124,8 +136,6 @@ class ItemAsset:
     visibility: str
     duration: str
     exifInfo: ExifInfo
-    libraryId: Optional[str] = None
-    livePhotoVideoId: Optional[str] = None
     people: Optional[List[str]] = None
     checksum: Optional[str] = None
     isOffline: bool = False
@@ -143,8 +153,8 @@ class ItemAsset:
     encodedVideoPath: Optional[str] = None
     isExternal: bool = False
     isReadOnly: bool = False
-    sidecarPath: Optional[str] = None
     isVisible: bool = True
+    isEdited: bool = None
     # Accept and ignore any additional fields from API
     unknown_fields: Optional[dict] = None
 
@@ -158,6 +168,11 @@ class ItemAsset:
         known_fields = {f.name for f in cls.__dataclass_fields__.values()}
         filtered_data = {k: v for k, v in data.items() if k in known_fields}
         unknown = {k: v for k, v in data.items() if k not in known_fields}
+        
+        for x in ['fileModifiedAt', 'localDateTime','updatedAt', 'fileCreatedAt', 'createdAt']:
+                if x in filtered_data:
+                    filtered_data[x] = datetime.datetime.fromisoformat(filtered_data[x])
+                    
         if unknown:
             filtered_data["unknown_fields"] = unknown
         return cls(**filtered_data)

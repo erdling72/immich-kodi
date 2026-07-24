@@ -4,14 +4,15 @@ import sys
 import datetime
 from urllib.parse import parse_qsl
 
-import xbmc
 import xbmcaddon
 import xbmcgui
 import xbmcplugin
 
 from album import list_albums, album
 from timeline import timeline, time
-from utils import get_url, API_KEY, conn, RAW_SERVER_URL, set_locale
+from utils import get_url, set_locale
+
+from immich import IMMICH
 
 DEBUG = False
 if DEBUG:
@@ -20,46 +21,33 @@ if DEBUG:
 URL = sys.argv[0]
 HANDLE = int(sys.argv[1])
 addon = xbmcaddon.Addon()
+
 if __name__ == '__main__':
     set_locale()
     params = dict(parse_qsl(sys.argv[2][1:]))
 
-    if not RAW_SERVER_URL:
+    if not IMMICH.url:
         addon.openSettings()
-        exit(0)
 
     try:
-        conn.request("GET", "/api/users/me", headers={
-            'Accept': 'application/json',
-            'User-agent': xbmc.getUserAgent(),
-            'x-api-key': API_KEY
-        })
-        response = conn.getresponse()
-        response.read()
-        if response.code == 401:
-            dialog = xbmcgui.Dialog()
-            d = dialog.ok(addon.getLocalizedString(30009),
-                          addon.getLocalizedString(30010))
-            exit(0)
-        elif response.code != 200:
-            raise Exception('Can\'t connect to Immich')
-    except socket.error as e:
-        dialog = xbmcgui.Dialog()
-        d = dialog.ok(addon.getLocalizedString(30007),
-                      addon.getLocalizedString(30008))
-        exit(0)
+        IMMICH.get_version()
+    except Exception as e:
+    	addon.openSettings()
+#        raise Exception('Can\'t connect to Immich')
 
     if not params.get('action'):
         xbmcplugin.addDirectoryItem(HANDLE, get_url(action='timeline'),
                                     xbmcgui.ListItem(addon.getLocalizedString(30002)), True)
-        xbmcplugin.addDirectoryItem(HANDLE, get_url(action='timeline', video='1'),
-                                    xbmcgui.ListItem(addon.getLocalizedString(30015)), True)
+
         xbmcplugin.addDirectoryItem(HANDLE, get_url(action='albums'),
                                     xbmcgui.ListItem(addon.getLocalizedString(30003)), True)
 
         xbmcplugin.endOfDirectory(HANDLE)
+        
+        
     elif params['action'] == 'settings':
         addon.openSettings()
+
     elif params['action'] == 'timeline':
         timeline('video' in params)
     elif params['action'] == 'albums':
@@ -71,5 +59,5 @@ if __name__ == '__main__':
 
 if DEBUG:
     import pydevd
-
     pydevd.stoptrace()
+

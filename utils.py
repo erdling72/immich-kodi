@@ -1,28 +1,18 @@
-import http.client
 import sys
-from datetime import datetime
-from urllib.parse import urlencode, urlparse
 
 import xbmc
 import xbmcplugin
 from xbmcaddon import Addon
 from xbmcvfs import translatePath
-
-import iso8601
+import datetime
+from urllib.parse import urlencode
 
 HANDLE = int(sys.argv[1])
 
-RAW_SERVER_URL = xbmcplugin.getSetting(HANDLE, "immich_url")
 SHARED_ONLY = xbmcplugin.getSetting(HANDLE, "shared_only")
 ASSET_NAMETYPE = int(xbmcplugin.getSetting(HANDLE, "asset_name"))
-SERVER_URL = urlparse(RAW_SERVER_URL)
-API_KEY = xbmcplugin.getSetting(HANDLE, "api_key")
 ADDON_PATH = translatePath(Addon().getAddonInfo("path"))
-conn = (
-    http.client.HTTPSConnection(SERVER_URL.netloc)
-    if SERVER_URL.scheme == "https"
-    else http.client.HTTPConnection(SERVER_URL.netloc)
-)
+
 datelong = xbmc.getRegion("datelong")
 timestamp = xbmc.getRegion("time")
 
@@ -42,26 +32,6 @@ def kodi_version_major():
 workaround = (
     xbmc.getCondVisibility("System.Platform.Android") and kodi_version_major() > 20
 )
-
-
-def strftime_polyfill(dt: datetime, fmt: str):
-    if workaround and "%-d" in fmt:
-        fmt = fmt.replace("%-d", dt.strftime("%d").lstrip("0"))
-    return dt.strftime(fmt)
-
-
-def get_asset_name(asset):
-    if ASSET_NAMETYPE == 0:
-        return strftime_polyfill(
-            iso8601.parse_date(asset.localDateTime), datelong + " " + timestamp
-        )
-    elif ASSET_NAMETYPE == 1:
-        return asset.originalFileName
-    else:
-        return strftime_polyfill(
-            iso8601.parse_date(asset.localDateTime), datelong + " " + timestamp
-        )
-
 
 def jsonrpc(*args, **kwargs):
     """Perform JSONRPC calls"""
@@ -113,17 +83,6 @@ def set_locale():
     return True
 
 
-def get_playback(id, type=None):
-    if type == "IMAGE":
-        # if item["type"] == "IMAGE":
-        return f"{RAW_SERVER_URL}/api/assets/{id}/thumbnail?size=preview|x-api-key={API_KEY}"
-    else:
-        return f"{RAW_SERVER_URL}/api/assets/{id}/video/playback|x-api-key={API_KEY}"
-
-
-
-
-
 def get_url(**kwargs):
     """
     Create a URL for calling the plugin recursively from the given set of keyword arguments.
@@ -135,5 +94,8 @@ def get_url(**kwargs):
     return "{}?{}".format(sys.argv[0], urlencode(kwargs))
 
 
-def getThumbUrl(id):
-    return f"{RAW_SERVER_URL}/api/assets/{id}/thumbnail|x-api-key={API_KEY}"
+#---------------------------------------------------------
+def next_month(any_day):
+    next_month = any_day.replace(day=28) + datetime.timedelta(days=4)
+    return next_month
+    # - datetime.timedelta(days=next_month.day)

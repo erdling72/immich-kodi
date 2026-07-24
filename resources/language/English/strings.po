@@ -29,7 +29,7 @@ msgid ""
 msgstr ""
 
 msgctxt "#30005"
-msgid "Show only shared albums"
+msgid "Show only favorite items"
 msgstr ""
 
 msgctxt "#30006"
@@ -78,4 +78,8 @@ msgstr ""
 
 msgctxt "#30017"
 msgid "Date & time"
+msgstr ""
+
+msgctxt "#30019"
+msgid "Original Quality"
 msgstr ""

@@ -21,7 +21,7 @@
                     <control format="string" type="edit">
                     </control>
                 </setting>
-                <setting id="shared_only" type="boolean" label="30005">
+                <setting id="fav_only" type="boolean" label="30005">
                     <level>0</level>
                     <default>false</default>
                     <constraints>
@@ -30,20 +30,17 @@
                     <control type="toggle">
                     </control>
                 </setting>
-                <setting id="asset_name" type="integer" label="30016">
+                <setting id="orig" type="boolean" label="30019">
                     <level>0</level>
-					<default>0</default>
-					<constraints>
-						<options>
-							<option label="30017">0</option>
-							<option label="30018">1</option>
-						</options>
-					</constraints>
-					<control format="string" type="list">
-						<heading>30016</heading>
-					</control>
+                    <default>true</default>
+                    <constraints>
+                        <allowempty>true</allowempty>
+                    </constraints>
+                    <control type="toggle">
+                    </control>
                 </setting>
             </group>
+
         </category>
     </section>
 </settings>
