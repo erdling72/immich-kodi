@@ -33,11 +33,19 @@ class Immich_API():
 
         resp = requests.request(action, url, headers=headers, json=payload)
 
-        if resp.status_code == 401:
-            return false
+        if resp.status_code == 403:
+            print(resp.text)
+            raise PermissionError
+
+        elif resp.status_code == 401:
+            print(resp.text)
+            raise ConnectionError
+#            return false
 
         elif resp.status_code != 200:
-            return false
+            print(resp.status_code, resp.text)
+            raise ConnectionError
+#            return false
             
         response = resp.json()
         return response
