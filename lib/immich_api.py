@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
 
-import requests
+import xbmc
+#import requests
+import http.client
+from urllib.parse import urlparse
+import json
 import logging
 import sys
 from lib.models import Album, ItemAsset, TimelineBucket
 
 class Immich_API():
     def __init__(self, RAW_SERVER_URL, APIKey):
+
+        xbmc.log("Immich_API CTOR: " + RAW_SERVER_URL, xbmc.LOGINFO)
+
         self.url    = RAW_SERVER_URL
+        self.url_parsed = urlparse(RAW_SERVER_URL)
         self.APIKey = APIKey
         self.global_filter = {}
 
@@ -22,33 +30,59 @@ class Immich_API():
             
     #---------------------------------------------------------
     def _api_call(self, action, path, payload=None):
-        url = f"{self.url}/api/{path}"
 
-        headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'x-api-key': self.APIKey,
-            "User-agent": self._user_agent(),
+#        xbmc.log("START", xbmc.LOGINFO)
+
+        host = self.url_parsed.hostname
+        port = self.url_parsed.port
+
+        conn = (
+            http.client.HTTPSConnection(host, port)
+            if self.url.startswith("https")
+            else http.client.HTTPConnection(host, port)
+        )
+
+#        xbmc.log(str(conn.__dict__), xbmc.LOGINFO)
+#        xbmc.log("END", xbmc.LOGINFO)
+
+        try:
+            #api_path = f"{self.url}/api/{path}"
+            api_path = f"/api/{path}"
+
+            headers = {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "x-api-key": self.APIKey,
+                "User-Agent": self._user_agent(),
             }
 
-        resp = requests.request(action, url, headers=headers, json=payload)
+            body = json.dumps(payload) if payload is not None else None
 
-        if resp.status_code == 403:
-            print(resp.text)
-            raise PermissionError
+            conn.request(action, api_path, body=body, headers=headers)
+            resp = conn.getresponse()
 
-        elif resp.status_code == 401:
-            print(resp.text)
-            raise ConnectionError
-#            return false
+            status = resp.status
+            text = resp.read().decode("utf-8")
 
-        elif resp.status_code != 200:
-            print(resp.status_code, resp.text)
-            raise ConnectionError
-#            return false
-            
-        response = resp.json()
-        return response
+            if status == 403:
+                print(text)
+                raise PermissionError
+            elif status == 401:
+                print(text)
+                raise ConnectionError
+            elif status != 200:
+                print(status, text)
+                raise ConnectionError
+
+            return json.loads(text) if text else None
+
+        except Exception as e:
+            xbmc.log("Fehler", xbmc.LOGINFO)
+            xbmc.log(str(e.__dict__), xbmc.LOGINFO)
+            raise
+
+        finally:
+            conn.close()
 
     #---------------------------------------------------------
     def get_version(self):
